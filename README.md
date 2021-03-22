@@ -1,6 +1,8 @@
 # Nox
 
-**TODO: Add description**
+A Reader for the Thermofisher 42i-TL Nox Box
+(https://www.thermofisher.com/order/catalog/product/42ITL#/42ITL). The only thing it supports is
+reading the no value every 10 seconds.
 
 ## Installation
 
