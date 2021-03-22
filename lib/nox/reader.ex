@@ -7,17 +7,18 @@ defmodule Nox.Reader do
   require Logger
 
   def start_link(%{serial_number: serial_number, address: address}) do
-    GenServer.start_link(__MODULE__, %{port_serial: serial_number, address: address, result: 0}, name: __MODULE__)
+    GenServer.start_link(__MODULE__, %{port_serial: serial_number, address: address}, name: __MODULE__)
   end
 
-  def init(%{port_serial: serial_number}) do
+  def init(%{port_serial: serial_number, address: address}) do
     {:ok, pid} = Circuits.UART.start_link
 
     {port, _} = Circuits.UART.enumerate
                 |> find_port(serial_number)
 
     Circuits.UART.open(pid, port, speed: 9600, framing: {Circuits.UART.Framing.Line, separator: "\r"})
-    {:ok, %{uart: pid, port: port}}
+    Process.send_after(self(), :ask_for_reading, 1_000)
+    {:ok, %{uart: pid, port: port, result: 0, address: address}}
   end
 
   @doc """
@@ -36,15 +37,23 @@ defmodule Nox.Reader do
     false
   end
 
-  def process_data(data, pid) do
-    case Float.parse(data) do
-      {number, "" } ->
-        Process.send(pid, {:parser, number}, [])
-        Process.send_after(self(), :ask_for_reading, 1_000)
-      :error ->
+  def  process_data(data, pid) do
+    {number_string, _ } = data
+                          |> String.split()
+                          |> List.pop_at(1)
+
+    case number_string do
+      nil ->
         Logger.info "NOx parsing error #{inspect data}"
-      _ ->
-        Logger.info "NOx parsing error #{inspect data}"
+      not_nil_number_string ->
+        case Float.parse(not_nil_number_string) do
+          {number, "" } ->
+            Process.send(pid, {:parser, number}, [])
+          :error ->
+            Logger.info "NOx parsing error #{inspect data}"
+          _ ->
+            Logger.info "NOx parsing error #{inspect data}"
+        end
     end
   end
 
@@ -83,6 +92,7 @@ defmodule Nox.Reader do
   def handle_info({:circuits_uart, port, data}, state) do
     if port == state[:port] do
       Task.start(__MODULE__, :process_data, [data, self()])
+      Process.send_after(self(), :ask_for_reading, 10_000)
     end
     {:noreply, state}
   end
@@ -93,6 +103,7 @@ defmodule Nox.Reader do
   end
 
   def handle_info(:ask_for_reading, state) do
-    Circuits.UART.write(state[:uart],  <<state[:address]>> <> "no\r")
+    Circuits.UART.write(state[:uart],  <<state[:address]>> <> "no")
+    {:noreply, state}
   end
 end
