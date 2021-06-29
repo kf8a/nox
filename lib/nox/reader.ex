@@ -13,12 +13,17 @@ defmodule Nox.Reader do
   def init(%{port_serial: serial_number, address: address}) do
     {:ok, pid} = Circuits.UART.start_link
 
-    {port, _} = Circuits.UART.enumerate
-                |> find_port(serial_number)
+    ports = Circuits.UART.enumerate
 
-    Circuits.UART.open(pid, port, speed: 9600, framing: {Circuits.UART.Framing.Line, separator: "\r"})
-    Process.send_after(self(), :ask_for_reading, 1_000)
-    {:ok, %{uart: pid, port: port, result: 0, address: address}}
+    case find_port(ports, serial_number) do
+      {:port, _} ->
+        Circuits.UART.open(pid, port, speed: 9600, framing: {Circuits.UART.Framing.Line, separator: "\r"})
+        Process.send_after(self(), :ask_for_reading, 1_000)
+        {:ok, %{uart: pid, port: port, result: 0, address: address}}
+      _ ->
+        Logger.warn "No Nox box found"
+        {:ok, %{uart: pid, port: port, result: 0, address: address}}
+    end
   end
 
   @doc """
