@@ -19,10 +19,10 @@ defmodule Nox.Reader do
       {port, _} ->
         Circuits.UART.open(pid, port, speed: 9600, framing: {Circuits.UART.Framing.Line, separator: "\r"})
         Process.send_after(self(), :ask_for_reading, 1_000)
-        {:ok, %{uart: pid, port: port, result: 0, address: address}}
+        {:ok, %{uart: pid, port: port, result: %Nox{}, address: address}}
       _ ->
         Logger.warn "No Nox box found"
-        {:ok, %{uart: pid, port: nil, result: 0, address: address}}
+        {:ok, %{uart: pid, port: nil, result: %Nox{}, address: address}}
     end
   end
 
@@ -53,7 +53,7 @@ defmodule Nox.Reader do
       not_nil_number_string ->
         case Float.parse(not_nil_number_string) do
           {number, "" } ->
-            Process.send(pid, {:parser, number}, [])
+            Process.send(pid, {:parser, %Nox{datetime: DateTime.utc_now, nox: number}}, [])
           :error ->
             Logger.info "NOx parsing error #{inspect data}"
           _ ->
