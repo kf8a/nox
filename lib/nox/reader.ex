@@ -145,7 +145,6 @@ defmodule Nox.Reader do
           Map.put(state[:result], :nox, result[:value])
       end
       |> Map.put(:datetime, result[:datetime])
-      |> IO.inspect()
 
     {:noreply, Map.put(state, :result, result)}
   end
