@@ -51,27 +51,35 @@ defmodule Nox.Reader do
     false
   end
 
-  def process_data(data, pid) do
-    {number_string, _} =
-      data
-      |> String.split()
-      |> List.pop_at(1)
-
+  defp parse_number(number_string) do
     case number_string do
       nil ->
-        Logger.info("NOx parsing error #{inspect(data)}")
+        Logger.info("NOx parsing error #{inspect(number_string)}")
 
       not_nil_number_string ->
         case Float.parse(not_nil_number_string) do
           {number, ""} ->
-            Process.send(pid, {:parser, %Nox{datetime: DateTime.utc_now(), nox: number}}, [])
-
-          :error ->
-            Logger.info("NOx parsing error #{inspect(data)}")
+            {:ok, number}
 
           _ ->
-            Logger.info("NOx parsing error #{inspect(data)}")
+            {:error, number_string}
         end
+    end
+  end
+
+  def process_data(data, pid) do
+    [compound, number_string, _unit] = String.split(data)
+
+    case parse_number(number_string) do
+      {:ok, value} ->
+        Process.send(
+          pid,
+          {:parser, %{datetime: DateTime.utc_now(), compound: compound, value: value}},
+          []
+        )
+
+      {:error, data} ->
+        Logger.info("NOx parsing error #{inspect(data)}")
     end
   end
 
@@ -125,12 +133,27 @@ defmodule Nox.Reader do
   end
 
   def handle_info({:parser, result}, state) do
-    # Task.start(Licor.Logger, :save, [result])
+    result =
+      case result[:compound] do
+        "no" ->
+          Map.put(state[:result], :no, result[:value])
+
+        "no2" ->
+          Map.put(state[:result], :no2, result[:value])
+
+        "nox" ->
+          Map.put(state[:result], :nox, result[:value])
+      end
+      |> Map.put(:datetime, result[:datetime])
+      |> IO.inspect()
+
     {:noreply, Map.put(state, :result, result)}
   end
 
   def handle_info(:ask_for_reading, state) do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "no")
+    Circuits.UART.write(state[:uart], <<state[:address]>> <> "no2")
+    Circuits.UART.write(state[:uart], <<state[:address]>> <> "nox")
     {:noreply, state}
   end
 end
