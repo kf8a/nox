@@ -92,6 +92,8 @@ defmodule Nox.Reader do
   end
 
   def process_data(data, pid) do
+    Logger.info("NOx raw data #{inspect(data)}")
+
     case munge_data(data) do
       {:ok, %{compound: compound, value: value}} ->
         Logger.info("NOx parsing #{inspect(compound)} #{inspect(value)}")
@@ -188,7 +190,7 @@ defmodule Nox.Reader do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "nox")
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "conv temp")
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "pmt temp")
-    Circuits.UART.write(state[:uart], <<state[:address]>> <> "flow")
+    # Circuits.UART.write(state[:uart], <<state[:address]>> <> "flow")
     {:noreply, state}
   end
 end
