@@ -7,8 +7,8 @@ defmodule Nox do
             nox: 0,
             no: 0,
             no2: 0,
-            conv: 0,
-            pmt: 0,
+            conv_temperature: 0,
+            pmt_temperature: 0,
             flow: 0
 
   @typedoc """
@@ -21,8 +21,8 @@ defmodule Nox do
           nox: Float,
           no: Float,
           no2: Float,
-          conv: Float,
-          pmt: Float,
+          conv_temperature: Float,
+          pmt_temperature: Float,
           flow: Float
         }
 end

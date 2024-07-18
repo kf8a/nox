@@ -51,30 +51,41 @@ defmodule Nox.Reader do
     false
   end
 
+  defp parse_number(nil), do: Logger.info("NOx parsing error #{inspect(nil)}")
+
   defp parse_number(number_string) do
-    case number_string do
-      nil ->
+    # Some of the results have a prefix
+    #
+    cond do
+      String.starts_with?(number_string, "pmt") ->
+        String.replace(number_string, "pmt temp", "")
+
+      String.starts_with?(number_string, "conv") ->
+        String.replace(number_string, "conv temp", "")
+
+      String.starts_with?(number_string, "flow") ->
+        String.replace(number_string, "flow", "")
+
+      String.starts_with?(number_string, "no") ->
+        String.replace(number_string, "no", "")
+
+      String.starts_with?(number_string, "no2") ->
+        String.replace(number_string, "no2", "")
+
+      String.starts_with?(number_string, "nox") ->
+        String.replace(number_string, "nox", "")
+
+      true ->
         Logger.info("NOx parsing error #{inspect(number_string)}")
+    end
+    |> String.trim()
+    |> Float.parse()
+    |> case do
+      {number, ""} ->
+        {:ok, number}
 
-      not_nil_number_string ->
-        # Some of the results have a prefix
-        my_number_string =
-          case String.starts_with?(not_nil_number_string, "temp") do
-            true ->
-              String.replace(not_nil_number_string, "temp", "")
-              |> String.trim()
-
-            false ->
-              not_nil_number_string
-          end
-
-        case Float.parse(my_number_string) do
-          {number, ""} ->
-            {:ok, number}
-
-          _ ->
-            {:error, number_string}
-        end
+      _ ->
+        {:error, number_string}
     end
   end
 
@@ -155,11 +166,11 @@ defmodule Nox.Reader do
         "nox" ->
           Map.put(state[:result], :nox, result[:value])
 
-        "conv" ->
-          Map.put(state[:result], :conv_temp, result[:value])
+        "conv_temperature" ->
+          Map.put(state[:result], :conv_temperature, result[:value])
 
-        "pmt" ->
-          Map.put(state[:result], :pmt_temp, result[:value])
+        "pmt_temperature" ->
+          Map.put(state[:result], :pmt_temperature, result[:value])
 
         "flow" ->
           Map.put(state[:result], :flow, result[:value])
