@@ -153,6 +153,7 @@ defmodule Nox.Reader do
     if port == state[:port] do
       Task.start(__MODULE__, :process_data, [data, self()])
       Process.send_after(self(), :ask_for_reading, 10_000)
+      Process.send_after(self(), :ask_for_diagnostic, 20_000)
     end
 
     {:noreply, state}
@@ -188,9 +189,13 @@ defmodule Nox.Reader do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "no")
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "no2")
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "nox")
+    {:noreply, state}
+  end
+
+  def handle_info(:ask_for_diagnostic, state) do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "conv temp")
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "pmt temp")
-    # Circuits.UART.write(state[:uart], <<state[:address]>> <> "flow")
+    Circuits.UART.write(state[:uart], <<state[:address]>> <> "flow")
     {:noreply, state}
   end
 end
