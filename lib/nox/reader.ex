@@ -153,7 +153,7 @@ defmodule Nox.Reader do
     if port == state[:port] do
       Task.start(__MODULE__, :process_data, [data, self()])
       Process.send_after(self(), :ask_for_reading, 10_000)
-      Process.send_after(self(), :ask_for_diagnostic, 20_000)
+      Process.send_after(self(), :ask_for_diagnostic, 25_000)
     end
 
     {:noreply, state}
