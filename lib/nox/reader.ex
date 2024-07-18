@@ -51,55 +51,51 @@ defmodule Nox.Reader do
     false
   end
 
-  defp parse_number(nil), do: Logger.info("NOx parsing error #{inspect(nil)}")
-
-  defp parse_number(number_string) do
+  defp munge_data(data) do
     # Some of the results have a prefix
 
-    Logger.info("NOx parsing #{inspect(number_string)}")
-    data_list = String.split(number_string)
+    Logger.info("NOx parsing #{inspect(data)}")
+    data_list = String.split(data)
 
-    result =
-      case hd(data_list) do
-        "pmt" ->
-          Enum.at(data_list, 2)
+    case hd(data_list) do
+      "pmt" ->
+        parse_float(Enum.at(data_list, 0), Enum.at(data_list, 2))
 
-        "conv" ->
-          Enum.at(data_list, 2)
+      "conv" ->
+        parse_float(Enum.at(data_list, 0), Enum.at(data_list, 2))
 
-        "no" ->
-          Enum.at(data_list, 1)
+      "no" ->
+        parse_float(Enum.at(data_list, 0), Enum.at(data_list, 1))
 
-        "no2" ->
-          Enum.at(data_list, 1)
+      "no2" ->
+        parse_float(Enum.at(data_list, 0), Enum.at(data_list, 1))
 
-        "nox" ->
-          Enum.at(data_list, 1)
+      "nox" ->
+        parse_float(Enum.at(data_list, 0), Enum.at(data_list, 1))
 
-        "flow" ->
-          Enum.at(data_list, 1)
-
-        _ ->
-          Logger.info("NOx parsing error #{inspect(number_string)}")
-      end
-
-    Logger.info("NOx parsing result #{inspect(result)}")
-
-    Float.parse(result)
-    |> case do
-      {number, ""} ->
-        {:ok, number}
+      "flow" ->
+        parse_float(Enum.at(data_list, 0), Enum.at(data_list, 1))
 
       _ ->
-        {:error, number_string}
+        {:error, data}
+    end
+  end
+
+  defp parse_float(compound, value) do
+    case Float.parse(value) do
+      {number, ""} ->
+        {:ok, %{compound: compound, value: number}}
+
+      _ ->
+        {:error, %{compound: compound, value: value}}
     end
   end
 
   def process_data(data, pid) do
-    [compound, number_string, _unit] = String.split(data)
+    case munge_data(data) do
+      {:ok, %{compound: compound, value: value}} ->
+        Logger.info("NOx parsing #{inspect(compound)} #{inspect(value)}")
 
-    case parse_number(number_string) do
-      {:ok, value} ->
         Process.send(
           pid,
           {:parser, %{datetime: DateTime.utc_now(), compound: compound, value: value}},
