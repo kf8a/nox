@@ -54,7 +54,6 @@ defmodule Nox.Reader do
   defp munge_data(data) do
     # Some of the results have a prefix
 
-    Logger.info("NOx parsing #{inspect(data)}")
     data_list = String.split(data)
 
     case hd(data_list) do
@@ -92,8 +91,6 @@ defmodule Nox.Reader do
   end
 
   def process_data(data, pid) do
-    Logger.info("NOx raw data #{inspect(data)}")
-
     case munge_data(data) do
       {:ok, %{compound: compound, value: value}} ->
         Logger.info("NOx parsing #{inspect(compound)} #{inspect(value)}")
