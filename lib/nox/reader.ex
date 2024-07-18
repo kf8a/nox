@@ -106,6 +106,10 @@ defmodule Nox.Reader do
     end
   end
 
+  defp ask(command) do
+    Process.send_after(self(), command, 2_000)
+  end
+
   def port, do: GenServer.call(__MODULE__, :port)
 
   def current_value, do: GenServer.call(__MODULE__, :current_value)
@@ -149,8 +153,10 @@ defmodule Nox.Reader do
   def handle_info({:circuits_uart, port, data}, state) do
     if port == state[:port] do
       Task.start(__MODULE__, :process_data, [data, self()])
-      Process.send_after(self(), :ask_for_reading, 10_000)
-      Process.send_after(self(), :ask_for_diagnostic, 62_000)
+      # I should randomly start one of these after a few seconds delay
+      [:ask_no, :ask_no2, :ask_nox, :ask_conv, :ask_pmt, :ask_flow]
+      |> Enum.random()
+      |> ask()
     end
 
     {:noreply, state}
@@ -182,9 +188,17 @@ defmodule Nox.Reader do
     {:noreply, Map.put(state, :result, result)}
   end
 
-  def handle_info(:ask_for_reading, state) do
+  def handle_info(:ask_no, state) do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "no")
+    {:noreply, state}
+  end
+
+  def handle_info(:ask_no2, state) do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "no2")
+    {:noreply, state}
+  end
+
+  def handle_info(:ask_nox, state) do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "nox")
     {:noreply, state}
   end
