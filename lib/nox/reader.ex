@@ -66,16 +66,16 @@ defmodule Nox.Reader do
         Enum.at(data_list, 2)
 
       "no" ->
-        Enum.at(data_list, 1)
+        Enum.at(data_list, 0)
 
       "no2" ->
-        Enum.at(data_list, 1)
+        Enum.at(data_list, 0)
 
       "nox" ->
-        Enum.at(data_list, 1)
+        Enum.at(data_list, 0)
 
       "flow" ->
-        Enum.at(data_list, 1)
+        Enum.at(data_list, 0)
 
       _ ->
         Logger.info("NOx parsing error #{inspect(number_string)}")
