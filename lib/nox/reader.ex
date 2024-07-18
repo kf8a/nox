@@ -171,10 +171,10 @@ defmodule Nox.Reader do
         "nox" ->
           Map.put(state[:result], :nox, result[:value])
 
-        "conv_temperature" ->
+        "conv" ->
           Map.put(state[:result], :conv_temperature, result[:value])
 
-        "pmt_temperature" ->
+        "pmt" ->
           Map.put(state[:result], :pmt_temperature, result[:value])
 
         "flow" ->
