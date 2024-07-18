@@ -55,30 +55,31 @@ defmodule Nox.Reader do
 
   defp parse_number(number_string) do
     # Some of the results have a prefix
-    #
-    cond do
-      String.starts_with?(number_string, "pmt") ->
-        String.replace(number_string, "pmt temp", "")
 
-      String.starts_with?(number_string, "conv") ->
-        String.replace(number_string, "conv temp", "")
+    data_list = String.split(number_string)
 
-      String.starts_with?(number_string, "flow") ->
-        String.replace(number_string, "flow", "")
+    case hd(data_list) do
+      "pmt" ->
+        Enum.at(data_list, 2)
 
-      String.starts_with?(number_string, "no") ->
-        String.replace(number_string, "no", "")
+      "conv" ->
+        Enum.at(data_list, 2)
 
-      String.starts_with?(number_string, "no2") ->
-        String.replace(number_string, "no2", "")
+      "no" ->
+        Enum.at(data_list, 1)
 
-      String.starts_with?(number_string, "nox") ->
-        String.replace(number_string, "nox", "")
+      "no2" ->
+        Enum.at(data_list, 1)
 
-      true ->
+      "nox" ->
+        Enum.at(data_list, 1)
+
+      "flow" ->
+        Enum.at(data_list, 1)
+
+      _ ->
         Logger.info("NOx parsing error #{inspect(number_string)}")
     end
-    |> String.trim()
     |> Float.parse()
     |> case do
       {number, ""} ->
