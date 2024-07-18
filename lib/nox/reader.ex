@@ -56,31 +56,36 @@ defmodule Nox.Reader do
   defp parse_number(number_string) do
     # Some of the results have a prefix
 
+    Logger.info("NOx parsing #{inspect(number_string)}")
     data_list = String.split(number_string)
 
-    case hd(data_list) do
-      "pmt" ->
-        Enum.at(data_list, 2)
+    result =
+      case hd(data_list) do
+        "pmt" ->
+          Enum.at(data_list, 2)
 
-      "conv" ->
-        Enum.at(data_list, 2)
+        "conv" ->
+          Enum.at(data_list, 2)
 
-      "no" ->
-        Enum.at(data_list, 0)
+        "no" ->
+          Enum.at(data_list, 1)
 
-      "no2" ->
-        Enum.at(data_list, 0)
+        "no2" ->
+          Enum.at(data_list, 1)
 
-      "nox" ->
-        Enum.at(data_list, 0)
+        "nox" ->
+          Enum.at(data_list, 1)
 
-      "flow" ->
-        Enum.at(data_list, 0)
+        "flow" ->
+          Enum.at(data_list, 1)
 
-      _ ->
-        Logger.info("NOx parsing error #{inspect(number_string)}")
-    end
-    |> Float.parse()
+        _ ->
+          Logger.info("NOx parsing error #{inspect(number_string)}")
+      end
+
+    Logger.info("NOx parsing result #{inspect(result)}")
+
+    Float.parse(result)
     |> case do
       {number, ""} ->
         {:ok, number}
