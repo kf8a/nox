@@ -24,7 +24,7 @@ defmodule Nox.Reader do
           framing: {Circuits.UART.Framing.Line, separator: "\r"}
         )
 
-        Process.send_after(self(), :ask_for_reading, 1_000)
+        Process.send_after(self(), :ask_no, 1_000)
         {:ok, %{uart: pid, port: port, result: %Nox{}, address: address}}
 
       _ ->
@@ -203,9 +203,17 @@ defmodule Nox.Reader do
     {:noreply, state}
   end
 
-  def handle_info(:ask_for_diagnostic, state) do
+  def handle_info(:ask_conv, state) do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "conv temp")
+    {:noreply, state}
+  end
+
+  def handle_info(:ask_pmt, state) do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "pmt temp")
+    {:noreply, state}
+  end
+
+  def handle_info(:ask_flow, state) do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "flow")
     {:noreply, state}
   end
