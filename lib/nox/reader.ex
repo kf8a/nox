@@ -57,7 +57,18 @@ defmodule Nox.Reader do
         Logger.info("NOx parsing error #{inspect(number_string)}")
 
       not_nil_number_string ->
-        case Float.parse(not_nil_number_string) do
+        # Some of the results have a prefix
+        my_number_string =
+          case String.starts_with?(not_nil_number_string, "temp") do
+            true ->
+              String.replace(not_nil_number_string, "temp", "")
+              |> String.trim()
+
+            false ->
+              not_nil_number_string
+          end
+
+        case Float.parse(my_number_string) do
           {number, ""} ->
             {:ok, number}
 
@@ -143,6 +154,15 @@ defmodule Nox.Reader do
 
         "nox" ->
           Map.put(state[:result], :nox, result[:value])
+
+        "conv" ->
+          Map.put(state[:result], :conv_temp, result[:value])
+
+        "pmt" ->
+          Map.put(state[:result], :pmt_temp, result[:value])
+
+        "flow" ->
+          Map.put(state[:result], :flow, result[:value])
       end
       |> Map.put(:datetime, result[:datetime])
 
@@ -153,6 +173,9 @@ defmodule Nox.Reader do
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "no")
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "no2")
     Circuits.UART.write(state[:uart], <<state[:address]>> <> "nox")
+    Circuits.UART.write(state[:uart], <<state[:address]>> <> "conv temp")
+    Circuits.UART.write(state[:uart], <<state[:address]>> <> "pmt temp")
+    Circuits.UART.write(state[:uart], <<state[:address]>> <> "flow")
     {:noreply, state}
   end
 end
