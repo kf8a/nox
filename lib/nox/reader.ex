@@ -93,7 +93,7 @@ defmodule Nox.Reader do
   def process_data(data, pid) do
     case munge_data(data) do
       {:ok, %{compound: compound, value: value}} ->
-        Logger.info("NOx parsing #{inspect(compound)} #{inspect(value)}")
+        Logger.debug("NOx parsing #{inspect(compound)} #{inspect(value)}")
 
         Process.send(
           pid,
@@ -107,7 +107,7 @@ defmodule Nox.Reader do
   end
 
   defp ask(command) do
-    Process.send_after(self(), command, 2_000)
+    Process.send_after(self(), command, 1_000)
   end
 
   def port, do: GenServer.call(__MODULE__, :port)
